@@ -1,7 +1,37 @@
-string distillPage = visit_url( "inventory.php?action=distill" );
-visit_url( "choice.php?whichchoice=1476&option=2&pwd" );
-string currentFamiliar = my_familiar();
 int turncount = my_turncount();
+
+string distillPage = visit_url( "inventory.php?action=distill" );
+
+matcher checkChoice = create_matcher( "I'll check back", distillPage );
+if (find(checkChoice)) {
+	visit_url( "choice.php?whichchoice=1476&option=2&pwd" );
+}
+
+string currentFamiliar = "";
+
+print(familiar_equipment(my_familiar()));
+
+
+
+
+if (familiar_equipment(my_familiar()) != $item[tiny stillsuit] ) {
+	string famPage = visit_url( "familiar.php" );
+	matcher suitedRow = create_matcher( "familiar(\\d+)(.*)stillsuit", famPage );
+	if(!find(suitedRow)){
+		print( "Didn't find a stillsuit equipped on any of your familiars. Aborting." );
+		exit;
+	}
+	else {
+		//print("suitedRow: " + suitedRow.group(2)); 
+		matcher suitedFam = create_matcher( "(\\d+)-pound ([^(]*)", suitedRow.group(2) );
+		find(suitedFam);
+		currentFamiliar = suitedFam.group(2);
+		print("suitedFam: " + suitedFam.group(2));
+	}
+}
+else {
+	currentFamiliar = my_familiar();
+}
  
 matcher drams = create_matcher( "there are <b>(\\d+)</b> drams", distillPage );
 matcher adventures = create_matcher( "booze producing <b>(\\d+) adventures</b>", distillPage );
@@ -53,3 +83,7 @@ string outputFile = "stillsuitSpade-" + now_to_string("yyyy-MM-dd") + ".txt";
 buffer placeholder = file_to_buffer(outputFile);
 append(placeholder,output);
 buffer_to_file(placeholder,outputFile);
+
+
+
+//<tr class="frow " data-.* data-attack="1"><td valign=center><input type=radio name=newfam value=(\\d+)></td><td valign=center><img onClick='fam \((\\d+)\)' src="/images/itemimages/familiar(\\d+).gif" width=30 height=30 border=0></td><td valign=top style='padding-top: .45em;'><b>(\\[sS]+)</b>, the (\\d+)-pound (^(*) \(.*\) <font size="1"><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="fave" href="familiar.php?.*">[favorite]</a>&nbsp;&nbsp;<a class="fave" href="familiar.php?&action=.*">[take with you]</a></font></td><td valign=center nowrap><center><b> (</b><img src="/images/itemimages/stillsuit.gif"
