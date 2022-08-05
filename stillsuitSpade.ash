@@ -9,24 +9,26 @@ if (find(checkChoice)) {
 
 string currentFamiliar = "";
 
-print(familiar_equipment(my_familiar()));
+print(familiar_equipped_equipment(my_familiar()));
 
 
 
 
-if (familiar_equipment(my_familiar()) != $item[tiny stillsuit] ) {
-	string famPage = visit_url( "familiar.php" );
-	matcher suitedRow = create_matcher( "familiar(\\d+)(.*)stillsuit", famPage );
-	if(!find(suitedRow)){
+if (familiar_equipped_equipment(my_familiar()) != $item[tiny stillsuit] ) {
+	buffer famPage = visit_url( "familiar.php" );
+	famPage = famPage.replace_string( "</tr>", "</tr>|");
+	matcher famrow = create_matcher( '<tr class="frow([^|]*)', famPage);
+	while (find(famRow)) {
+	    matcher frow = create_matcher( "(\\d+)-pound ([^(]*).*stillsuit", famrow.group(1) );
+	    if (find(frow)) {
+	        currentFamiliar = frow.group(2);
+	        print("suitedFam: " + frow.group(2));
+	        break;
+	    }
+	}
+	if (currentFamiliar == "") {
 		print( "Didn't find a stillsuit equipped on any of your familiars. Aborting." );
 		exit;
-	}
-	else {
-		//print("suitedRow: " + suitedRow.group(2)); 
-		matcher suitedFam = create_matcher( "(\\d+)-pound ([^(]*)", suitedRow.group(2) );
-		find(suitedFam);
-		currentFamiliar = suitedFam.group(2);
-		print("suitedFam: " + suitedFam.group(2));
 	}
 }
 else {
